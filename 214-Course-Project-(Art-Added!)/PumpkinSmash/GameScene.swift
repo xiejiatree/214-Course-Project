@@ -12,6 +12,7 @@ class GameScene: SKScene {
     
     var entities = [GKEntity]()
     var graphs = [String : GKGraph]()
+    var person : SKSpriteNode! //NEW GameObject, -Erica
     
     private var lastUpdateTime : TimeInterval = 0
     private var label : SKLabelNode?
@@ -37,12 +38,13 @@ class GameScene: SKScene {
         slingshotBase = childNode(withName: "slingshot") as? SKSpriteNode
         slingshotBand = childNode(withName: "slingshotBand") as? SKShapeNode
         pumpkin = childNode(withName: "pumpkin") as? SKSpriteNode
+        person = childNode(withName: "right-wp-frame1")as?SKSpriteNode
         
         initialPumpPos = pumpkin.position
-        
         restingArc()
         
         self.lastUpdateTime = 0
+        
         
         // Get label node from scene and store it for use later
         self.label = self.childNode(withName: "//helloLabel") as? SKLabelNode
@@ -50,7 +52,10 @@ class GameScene: SKScene {
             label.alpha = 0.0
             label.run(SKAction.fadeIn(withDuration: 2.0))
         }
-            
+        createPerson() //Make a person
+        //        while(true){
+        //            createPerson()
+        //        }
     }
     
     func restingArc(){
@@ -65,7 +70,7 @@ class GameScene: SKScene {
         slingshotBand.lineWidth = 2
         slingshotBand.strokeColor = .black
         slingshotBand.fillColor = .clear
-
+        
     }
     
     func updateArc(point: CGPoint){
@@ -73,9 +78,9 @@ class GameScene: SKScene {
         let distance = hypot(slingshotBase.position.x - pumpkin.position.x, slingshotBase.position.y - pumpkin.position.y)
         var controlPoint: CGPoint
         //if distance <= maxRange {
-            //controlPoint = point
+        //controlPoint = point
         //} else {
-            //controlPoint = ssDefaultControl
+        //controlPoint = ssDefaultControl
         //}
         
         controlPoint = point
@@ -92,7 +97,7 @@ class GameScene: SKScene {
         slingshotBand.strokeColor = .black
         slingshotBand.fillColor = .clear
     }
-
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             let touchLocation = touch.location(in: self)
@@ -149,4 +154,53 @@ class GameScene: SKScene {
         
         self.lastUpdateTime = currentTime
     }
+    
+    //NEW createPerson function -Erica
+    func createPerson() {//Creates an animated person. Would be nice if this could happen randomly on either side, and I don't know how to get it to happen multiple times in once game cycle.
+        //Sprite animation tutorial: https://www.youtube.com/watch?v=cI9aH1_a2J0&ab_channel=MathienVision //It's a little old but it will do.
+        let r_frame1 = SKTexture(imageNamed: "right-wp-frame1")
+        let r_frame2 = SKTexture(imageNamed: "right-wp-frame2")
+        let r_frame3 = SKTexture(imageNamed: "right-wp-frame3")
+        let r_frame4 = SKTexture(imageNamed: "right-wp-frame4")
+        let rightTextures = [r_frame1, r_frame2, r_frame3, r_frame4]
+        
+        let l_frame1 = SKTexture(imageNamed: "left-wp-frame1")
+        let l_frame2 = SKTexture(imageNamed: "left-wp-frame2")
+        let l_frame3 = SKTexture(imageNamed: "left-wp-frame3")
+        let l_frame4 = SKTexture(imageNamed: "left-wp-frame4")
+        let leftTextures = [l_frame1, l_frame2, l_frame3, l_frame4]
+        
+        let right_animation = SKAction.animate(with: rightTextures, timePerFrame: 0.25) //iterates through the four frames in one second.
+        let left_animation = SKAction.animate(with: leftTextures, timePerFrame: 0.25)
+        
+        let spawnSide = Bool.random() //True = LEFT, False = RIGHT
+        let xPosition: CGFloat = spawnSide ? -100 : frame.width + 100
+        let yPosition: CGFloat = frame.minY + frame.height * 0.25
+        let direction: CGFloat = spawnSide ? 1 : -1
+        
+        let person = SKSpriteNode(texture: spawnSide ? rightTextures[0] : leftTextures[0])
+        person.position = CGPoint(x: xPosition, y: yPosition)
+        person.xScale = 0.25 //Original sprite is 1024px, scaling it down
+        person.yScale = 0.25
+        addChild(person)
+        
+        let animation = spawnSide ? right_animation : left_animation
+        let animationAction = SKAction.repeatForever(animation)
+        person.run(animationAction, withKey: "animation")
+        
+        let moveToCenter = SKAction.move(to: CGPoint(x: frame.midX, y: yPosition), duration: 4.0)
+        let changeDirection = SKAction.run { [weak person] in
+            guard let person = person else { return }
+            let newDirection = Bool.random() ? 1 : -1
+            let newTextures = newDirection == 1 ? rightTextures : leftTextures
+            person.texture = newTextures.first
+            let newAnimation = SKAction.animate(with: newTextures, timePerFrame: 0.25)
+            person.run(SKAction.repeatForever(newAnimation), withKey: "animation")
+        }
+        
+        let sequence = SKAction.sequence([moveToCenter, changeDirection]) //I need to read up on SKAction sequence. Ideally the person will first walk to the center of the screen and then randomly change direction after that.
+        let repeatSequence = SKAction.repeatForever(sequence)
+        person.run(repeatSequence)
+    }
+    
 }
