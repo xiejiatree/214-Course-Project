@@ -53,6 +53,8 @@ class GameScene: SKScene {
             label.run(SKAction.fadeIn(withDuration: 2.0))
         }
         createPerson() //Make a person
+        createOwl() //Make an owl
+        createGirl()
         //        while(true){
         //            createPerson()
         //        }
@@ -204,4 +206,50 @@ class GameScene: SKScene {
         person.run(repeatSequence)
     }
     
+    func createOwl(){
+
+        
+        let owl_frame_1 = SKTexture(imageNamed: "owl-left-frame1")
+        let owl_frame_2 = SKTexture(imageNamed: "owl-left-frame2")
+        let owl_frame_3 = SKTexture(imageNamed: "owl-left-frame3")
+        let owl_frame_4 = SKTexture(imageNamed: "owl-left-frame4")
+        let owl_left_textures = [owl_frame_1, owl_frame_2, owl_frame_3, owl_frame_4]
+        
+        let owl = SKSpriteNode(texture: owl_frame_1)
+        let xPosition: CGFloat = frame.midX
+        let yPosition: CGFloat = frame.minY + frame.height * 0.75
+        owl.position = CGPoint(x: xPosition, y: yPosition)
+        owl.xScale = 0.25
+        owl.yScale = 0.25
+        addChild(owl)
+        
+        let owl_left_animation = SKAction.animate(with: owl_left_textures, timePerFrame: 0.25)
+        let owl_left_animationAction = SKAction.repeatForever(owl_left_animation)
+        owl.run(owl_left_animationAction, withKey: "owl_left_animation")
+        
+    }
+    
+    func createGirl(){
+        let girl_frame1 = SKTexture(imageNamed: "right-girl-frame1")
+        let girl_frame2 = SKTexture(imageNamed: "right-girl-frame2")
+        let girl_frame3 = SKTexture(imageNamed: "right-girl-frame3")
+        let girl_frame4 = SKTexture(imageNamed: "right-girl-frame4")
+        let girl_right_textures = [girl_frame1, girl_frame2, girl_frame3, girl_frame4]
+        
+        let girl = SKSpriteNode(texture: girl_frame1)
+        let xPosition: CGFloat = frame.minX + frame.width * 0.75
+        let yPosition: CGFloat = frame.minY + frame.height * 0.25
+        girl.position = CGPoint(x: xPosition, y: yPosition)
+        girl.xScale = 0.25
+        girl.yScale = 0.25
+        
+        addChild(girl)
+        
+        let girl_right_animation = SKAction.animate(with: girl_right_textures, timePerFrame: 0.25)
+        let girl_right_animationAction = SKAction.repeatForever(girl_right_animation)
+        girl.run(girl_right_animationAction, withKey: "girl_right_animation")
+    }
+
+    
 }
+
