@@ -52,12 +52,9 @@ class GameScene: SKScene {
             label.alpha = 0.0
             label.run(SKAction.fadeIn(withDuration: 2.0))
         }
-        createPerson() //Make a person
-        createOwl() //Make an owl
-        createGirl()
-        //        while(true){
-        //            createPerson()
-        //        }
+        startRandomPersonSpawning()
+        //startRandomGirlSpawning()
+        startRandomOwlSpawning()
     }
     
     func restingArc(){
@@ -158,97 +155,201 @@ class GameScene: SKScene {
         self.lastUpdateTime = currentTime
     }
     
-    //NEW createPerson function -Erica
-    func createPerson() {//Creates an animated person. Would be nice if this could happen randomly on either side, and I don't know how to get it to happen multiple times in once game cycle.
-        //Sprite animation tutorial: https://www.youtube.com/watch?v=cI9aH1_a2J0&ab_channel=MathienVision //It's a little old but it will do.
-        let r_frame1 = SKTexture(imageNamed: "right-wp-frame1")
-        let r_frame2 = SKTexture(imageNamed: "right-wp-frame2")
-        let r_frame3 = SKTexture(imageNamed: "right-wp-frame3")
-        let r_frame4 = SKTexture(imageNamed: "right-wp-frame4")
-        let rightTextures = [r_frame1, r_frame2, r_frame3, r_frame4]
+    func startRandomPersonSpawning() { //Start Random Spawning People.
+        let spawnAction = SKAction.run { [weak self] in
+            self?.createPerson()
+            print("createPerson Called!")
+        }
         
-        let l_frame1 = SKTexture(imageNamed: "left-wp-frame1")
-        let l_frame2 = SKTexture(imageNamed: "left-wp-frame2")
-        let l_frame3 = SKTexture(imageNamed: "left-wp-frame3")
-        let l_frame4 = SKTexture(imageNamed: "left-wp-frame4")
-        let leftTextures = [l_frame1, l_frame2, l_frame3, l_frame4]
+        let waitAction = SKAction.wait(forDuration: TimeInterval.random(in: 3.0...5.0)) // Random interval between 1-5 seconds
+        let sequence = SKAction.sequence([spawnAction, waitAction])
+        let repeatAction = SKAction.repeatForever(sequence)
         
-        let right_animation = SKAction.animate(with: rightTextures, timePerFrame: 0.25) //iterates through the four frames in one second.
-        let left_animation = SKAction.animate(with: leftTextures, timePerFrame: 0.25)
+        run(repeatAction, withKey: "spawnPersons")
+    }
+
+    func createPerson() {
+        // Define textures
+        let rightTextures = [
+            SKTexture(imageNamed: "right-wp-frame1"),
+            SKTexture(imageNamed: "right-wp-frame2"),
+            SKTexture(imageNamed: "right-wp-frame3"),
+            SKTexture(imageNamed: "right-wp-frame4")
+        ]
         
-        let spawnSide = Bool.random() //True = LEFT, False = RIGHT
-        let xPosition: CGFloat = spawnSide ? -100 : frame.width + 100
+        let leftTextures = [
+            SKTexture(imageNamed: "left-wp-frame1"),
+            SKTexture(imageNamed: "left-wp-frame2"),
+            SKTexture(imageNamed: "left-wp-frame3"),
+            SKTexture(imageNamed: "left-wp-frame4")
+        ]
+        
+        let girl_rightTextures = [
+            SKTexture(imageNamed: "right-girl-frame1"),
+              SKTexture(imageNamed: "right-girl-frame2"),
+              SKTexture(imageNamed: "right-girl-frame3"),
+              SKTexture(imageNamed: "right-girl-frame4")
+        ]
+        
+        let girl_leftTextures = [
+            SKTexture(imageNamed: "left-girl-frame1"),
+            SKTexture(imageNamed: "left-girl-frame2"),
+            SKTexture(imageNamed: "left-girl-frame3"),
+            SKTexture(imageNamed: "left-girl-frame4")
+        ]
+        
+        // Random spawn side
+        let spawnSide = Bool.random() // True = LEFT, False = RIGHT
+        let boyOrGirl = Bool.random() //True = GIRL, False = BOY
+        let xPosition: CGFloat = spawnSide ? frame.minX-100 : frame.width + 100
         let yPosition: CGFloat = frame.minY + frame.height * 0.25
-        let direction: CGFloat = spawnSide ? 1 : -1
+        let destinationX: CGFloat = spawnSide ? frame.width + 100 : frame.minX-100
         
-        let person = SKSpriteNode(texture: spawnSide ? rightTextures[0] : leftTextures[0])
+        // Create person sprite
+//        let person = SKSpriteNode(texture: spawnSide ? rightTextures[0] : leftTextures[0])
+        var person: SKSpriteNode
+
+        // Assign the appropriate texture and initialize the SKSpriteNode
+        if spawnSide && boyOrGirl {
+            person = SKSpriteNode(texture: girl_rightTextures[0])
+        } 
+        else if spawnSide && !boyOrGirl {
+            person = SKSpriteNode(texture: rightTextures[0])
+        } 
+        else if !spawnSide && boyOrGirl {
+            person = SKSpriteNode(texture: girl_leftTextures[0])
+        } 
+        else {
+            person = SKSpriteNode(texture: leftTextures[0])
+        }
+
+        // Set properties for the person
+        person.name = "person"
         person.position = CGPoint(x: xPosition, y: yPosition)
-        person.xScale = 0.25 //Original sprite is 1024px, scaling it down
+        person.xScale = 0.25
         person.yScale = 0.25
         addChild(person)
+        print("A person was created, spawnSide = \(spawnSide), boyOrGirl = \(boyOrGirl)")
+
         
-        let animation = spawnSide ? right_animation : left_animation
+        var textures : [SKTexture]
+        // Animation based on spawn side
+        if(spawnSide && boyOrGirl){
+            textures = girl_rightTextures
+        }
+        
+        else if(spawnSide && !boyOrGirl){
+            textures = rightTextures
+        }
+        
+        else if(!spawnSide && boyOrGirl){
+            textures = girl_leftTextures
+        }
+        else {
+            textures = leftTextures
+        }
+        
+//        let textures = spawnSide ? rightTextures : leftTextures
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.25)
         let animationAction = SKAction.repeatForever(animation)
         person.run(animationAction, withKey: "animation")
         
-        let moveToCenter = SKAction.move(to: CGPoint(x: frame.midX, y: yPosition), duration: 4.0)
-        let changeDirection = SKAction.run { [weak person] in
-            guard let person = person else { return }
-            let newDirection = Bool.random() ? 1 : -1
-            let newTextures = newDirection == 1 ? rightTextures : leftTextures
-            person.texture = newTextures.first
-            let newAnimation = SKAction.animate(with: newTextures, timePerFrame: 0.25)
-            person.run(SKAction.repeatForever(newAnimation), withKey: "animation")
+        // Move across the screen
+        let moveDistance = abs(destinationX - xPosition)
+        let moveDuration = TimeInterval(moveDistance / 100.0) // Adjust speed by changing the divisor
+        let moveAction = SKAction.moveTo(x: destinationX, duration: moveDuration)
+        
+        // Remove person after movement
+        let removeAction = SKAction.removeFromParent()
+        
+        let sequence = SKAction.sequence([moveAction, removeAction])
+        person.run(sequence, withKey: "movement")
+    }
+    
+    func startRandomOwlSpawning() { //Start Random Spawning People.
+        let spawnAction = SKAction.run { [weak self] in
+            self?.createOwl()
+            print("createOwl Called!")
         }
         
-        let sequence = SKAction.sequence([moveToCenter, changeDirection]) //I need to read up on SKAction sequence. Ideally the person will first walk to the center of the screen and then randomly change direction after that.
-        let repeatSequence = SKAction.repeatForever(sequence)
-        person.run(repeatSequence)
+        let waitAction = SKAction.wait(forDuration: TimeInterval.random(in: 5.0...10.0)) // Random interval between 1-5 seconds
+        let sequence = SKAction.sequence([spawnAction, waitAction])
+        let repeatAction = SKAction.repeatForever(sequence)
+        
+        run(repeatAction, withKey: "spawnOwls")
     }
+    
     
     func createOwl(){
+        // Define textures
+         let owl_rightTextures = [
+             SKTexture(imageNamed: "owl-right-frame1"),
+             SKTexture(imageNamed: "owl-right-frame2"),
+             SKTexture(imageNamed: "owl-right-frame3"),
+             SKTexture(imageNamed: "owl-right-frame4")
+         ]
+         
+         let owl_leftTextures = [
+             SKTexture(imageNamed: "owl-left-frame1"),
+             SKTexture(imageNamed: "owl-left-frame2"),
+             SKTexture(imageNamed: "owl-left-frame3"),
+             SKTexture(imageNamed: "owl-left-frame4")
+         ]
 
-        
-        let owl_frame_1 = SKTexture(imageNamed: "owl-left-frame1")
-        let owl_frame_2 = SKTexture(imageNamed: "owl-left-frame2")
-        let owl_frame_3 = SKTexture(imageNamed: "owl-left-frame3")
-        let owl_frame_4 = SKTexture(imageNamed: "owl-left-frame4")
-        let owl_left_textures = [owl_frame_1, owl_frame_2, owl_frame_3, owl_frame_4]
-        
-        let owl = SKSpriteNode(texture: owl_frame_1)
-        let xPosition: CGFloat = frame.midX
-        let yPosition: CGFloat = frame.minY + frame.height * 0.75
-        owl.position = CGPoint(x: xPosition, y: yPosition)
-        owl.xScale = 0.25
-        owl.yScale = 0.25
-        addChild(owl)
-        
-        let owl_left_animation = SKAction.animate(with: owl_left_textures, timePerFrame: 0.25)
-        let owl_left_animationAction = SKAction.repeatForever(owl_left_animation)
-        owl.run(owl_left_animationAction, withKey: "owl_left_animation")
-        
+         // Random spawn side
+         let spawnSide = Bool.random() // True = LEFT, False = RIGHT
+         let xPosition: CGFloat = spawnSide ? frame.minX-100 : frame.width + 100
+         let yPosition: CGFloat = frame.minY + frame.height * CGFloat.random(in: 0.50...0.85)
+         let destinationX: CGFloat = spawnSide ? frame.width + 100 : frame.minX-100
+         
+         // Create person sprite
+ //        let person = SKSpriteNode(texture: spawnSide ? rightTextures[0] : leftTextures[0])
+         var owl: SKSpriteNode
+
+         // Assign the appropriate texture and initialize the SKSpriteNode
+         if spawnSide{
+             owl = SKSpriteNode(texture: owl_rightTextures[0])
+         }
+         else {
+             owl = SKSpriteNode(texture: owl_rightTextures[0])
+         }
+
+         // Set properties for the person
+         owl.name = "owl"
+         owl.position = CGPoint(x: xPosition, y: yPosition)
+         owl.xScale = 0.25
+         owl.yScale = 0.25
+         addChild(owl)
+         print("An owl was created.")
+
+         
+         var textures : [SKTexture]
+         if(spawnSide){
+             textures = owl_rightTextures
+         }
+         else{
+             textures = owl_leftTextures
+         }
+         // Animation based on spawn side
+         
+ //        let textures = spawnSide ? rightTextures : leftTextures
+         let animation = SKAction.animate(with: textures, timePerFrame: 0.25)
+         let animationAction = SKAction.repeatForever(animation)
+         owl.run(animationAction, withKey: "animation")
+         
+         // Move across the screen
+         let moveDistance = abs(destinationX - xPosition)
+         let moveDuration = TimeInterval(moveDistance / 150.0) // Adjust speed by changing the divisor
+         let moveAction = SKAction.moveTo(x: destinationX, duration: moveDuration)
+         
+         // Remove person after movement
+         let removeAction = SKAction.removeFromParent()
+         
+         let sequence = SKAction.sequence([moveAction, removeAction])
+         owl.run(sequence, withKey: "movement")
     }
     
-    func createGirl(){
-        let girl_frame1 = SKTexture(imageNamed: "right-girl-frame1")
-        let girl_frame2 = SKTexture(imageNamed: "right-girl-frame2")
-        let girl_frame3 = SKTexture(imageNamed: "right-girl-frame3")
-        let girl_frame4 = SKTexture(imageNamed: "right-girl-frame4")
-        let girl_right_textures = [girl_frame1, girl_frame2, girl_frame3, girl_frame4]
-        
-        let girl = SKSpriteNode(texture: girl_frame1)
-        let xPosition: CGFloat = frame.minX + frame.width * 0.75
-        let yPosition: CGFloat = frame.minY + frame.height * 0.25
-        girl.position = CGPoint(x: xPosition, y: yPosition)
-        girl.xScale = 0.25
-        girl.yScale = 0.25
-        
-        addChild(girl)
-        
-        let girl_right_animation = SKAction.animate(with: girl_right_textures, timePerFrame: 0.25)
-        let girl_right_animationAction = SKAction.repeatForever(girl_right_animation)
-        girl.run(girl_right_animationAction, withKey: "girl_right_animation")
-    }
+
 
     
 }
