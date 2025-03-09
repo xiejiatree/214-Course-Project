@@ -1,4 +1,5 @@
 # Killer Pumpkin Features:
+- Bona fide indie game
 - Gore sounds
 - In-house sprites
 - Scrolling camera view
